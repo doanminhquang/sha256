@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
             outline: none;
             box-sizing: border-box;
         }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -16,10 +18,12 @@
             background-color: #f4f4f9;
             color: #333;
         }
+
         h1 {
             text-align: center;
             color: #4CAF50;
         }
+
         button {
             margin: 5px;
             padding: 10px;
@@ -30,9 +34,11 @@
             cursor: pointer;
             flex: 0 1 auto;
         }
+
         button:hover {
             background-color: #45a049;
         }
+
         .container {
             max-width: 600px;
             margin: auto;
@@ -42,11 +48,13 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+
         .input-row {
             display: flex;
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
+
         .input-row textarea,
         .input-row select,
         .input-row button,
@@ -58,10 +66,12 @@
             border-radius: 5px;
             border: 1px solid #ccc;
         }
+
         #secret-key,
         #delimiter {
             max-width: 100%;
         }
+
         #hmac-result,
         #hmac-data {
             margin-top: 20px;
@@ -69,6 +79,7 @@
             word-break: break-all;
             color: #4CAF50;
         }
+
         @media (max-width: 600px) {
             .input-row {
                 flex-direction: column;
@@ -76,6 +87,7 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Trình tạo HMAC</h1>
     <div class="container">
@@ -87,13 +99,12 @@
             <option value=",">,</option>
             <option value=";">;</option>
         </select>
-		<label for="input-container">Dữ liệu:</label>
+        <label for="input-container">Dữ liệu:</label>
         <div id="input-container"></div>
         <button id="add-row">Thêm dòng</button>
         <button id="gen-hmac">Tạo HMAC</button>
         <div id="hmac-data"></div>
         <div id="hmac-result"></div>
-        <br><br>
         <button id="copy-hmac" style="display:none;">Sao chép HMAC</button>
     </div>
     <script>
@@ -119,13 +130,14 @@
             row.id = `row-${rowCount++}`;
 
             const textarea = document.createElement('textarea');
-			textarea.style.resize = 'none';
+		    textarea.style.resize = 'none';
+		    textarea.style.height = "35px";
             row.appendChild(textarea);
 
             const select = document.createElement('select');
             select.innerHTML = '<option value="text">Văn bản</option><option value="json">JSON</option>';
             select.addEventListener('change', () => {
-				textarea.style.height = "";
+		    textarea.style.height = "35px";
                 textarea.style.resize = select.value === 'json' ? 'vertical' : 'none';
             });
             row.appendChild(select);
@@ -180,4 +192,5 @@
         });
     </script>
 </body>
+
 </html>
