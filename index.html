@@ -123,6 +123,15 @@
                         .join("");
         }
 
+        function beautifyJson(textarea) {
+            try {
+                const json = JSON.parse(textarea.value);
+                textarea.value = JSON.stringify(json, null, 4);
+            } catch (e) {
+                alert('Định dạng JSON không hợp lệ.');
+            }
+        }
+
         document.getElementById('add-row').addEventListener('click', () => {
             const container = document.getElementById('input-container');
             const row = document.createElement('div');
@@ -130,17 +139,28 @@
             row.id = `row-${rowCount++}`;
 
             const textarea = document.createElement('textarea');
-		    textarea.style.resize = 'none';
-		    textarea.style.height = "35px";
+            textarea.style.resize = 'none';
+            textarea.style.height = "35px";
             row.appendChild(textarea);
 
             const select = document.createElement('select');
             select.innerHTML = '<option value="text">Văn bản</option><option value="json">JSON</option>';
             select.addEventListener('change', () => {
-		    textarea.style.height = "35px";
+                textarea.style.height = "35px";
                 textarea.style.resize = select.value === 'json' ? 'vertical' : 'none';
+                if (select.value === 'json') {
+                    beautifyButton.style.display = 'inline-block';
+                } else {
+                    beautifyButton.style.display = 'none';
+                }
             });
             row.appendChild(select);
+
+            const beautifyButton = document.createElement('button');
+            beautifyButton.innerText = 'Làm đẹp JSON';
+            beautifyButton.style.display = 'none';
+            beautifyButton.addEventListener('click', () => beautifyJson(textarea));
+            row.appendChild(beautifyButton);
 
             const deleteButton = document.createElement('button');
             deleteButton.innerText = 'Xóa';
@@ -175,15 +195,15 @@
 
             const message = messageArray.join(delimiter);
             const hmacValue = await hmac(secretKey, message);
-			const dataLabel = 'DATA: ';
-			const hmacLabel = 'HMAC: ';
+            const dataLabel = 'DATA: ';
+            const hmacLabel = 'HMAC: ';
             document.getElementById('hmac-data').textContent = `${dataLabel}${message}`;
             document.getElementById('hmac-result').textContent = `${hmacLabel}${hmacValue}`;
             document.getElementById('copy-hmac').style.display = 'block';
         });
 
         document.getElementById('copy-hmac').addEventListener('click', () => {
-            const hmacText = document.getElementById('hmac-result').textContent.replace(hmacLabel, '');
+            const hmacText = document.getElementById('hmac-result').textContent.replace('HMAC: ', '');
             navigator.clipboard.writeText(hmacText).then(() => {
                 alert('HMAC đã được sao chép vào clipboard.');
             }).catch(() => {
