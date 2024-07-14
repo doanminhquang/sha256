@@ -173,6 +173,8 @@
                     saveMethod: saveMethod
                 };
                 localStorage.setItem('hmacData', JSON.stringify(data));
+            } else {
+                localStorage.removeItem('hmacData');
             }
         }
 
@@ -186,6 +188,10 @@
             } else if (method === 'throttle') {
                 throttledSaveData();
             }
+        }
+
+        function clearSavedData() {
+            localStorage.removeItem('hmacData');
         }
 
         document.getElementById('add-row').addEventListener('click', () => {
@@ -262,6 +268,7 @@
             document.getElementById('hmac-data').textContent = `${dataLabel}${message}`;
             document.getElementById('hmac-result').textContent = `${hmacLabel}${hmacValue}`;
             document.getElementById('copy-hmac').style.display = 'block';
+            handleInput();
         });
 
         document.getElementById('copy-hmac').addEventListener('click', () => {
@@ -291,12 +298,28 @@
                 document.getElementById('auto-save').checked = data.autoSave;
                 document.getElementById('save-method').value = data.saveMethod;
             }
+            handleInput();
         });
 
-        document.getElementById('auto-save').addEventListener('change', handleInput);
-        document.getElementById('save-method').addEventListener('change', handleInput);
-        document.getElementById('secret-key').addEventListener('input', handleInput);
-        document.getElementById('delimiter').addEventListener('change', handleInput);
+        document.getElementById('auto-save').addEventListener('change', () => {
+            handleInput();
+            if (!document.getElementById('auto-save').checked) {
+                clearSavedData();
+            }
+        });
+
+        document.getElementById('save-method').addEventListener('change', () => {
+            handleInput();
+        });
+
+        document.getElementById('secret-key').addEventListener('input', () => {
+            handleInput();
+        });
+
+        document.getElementById('delimiter').addEventListener('change', () => {
+            handleInput();
+        });
+
     </script>
 </body>
 
