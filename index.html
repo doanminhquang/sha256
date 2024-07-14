@@ -5,31 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trình tạo HMAC</title>
     <style>
-		*{
-			outline:none;
-		}
+        * {
+            outline: none;
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
             background-color: #f4f4f9;
             color: #333;
-            box-sizing: border-box;
         }
         h1 {
             text-align: center;
             color: #4CAF50;
         }
-		button {
+        button {
             margin: 5px;
             padding: 10px;
             border-radius: 5px;
-            border: 1px solid #ccc;
-            flex: 0 1 auto;
+            border: none;
             background-color: #4CAF50;
             color: #fff;
-            border: none;
             cursor: pointer;
+            flex: 0 1 auto;
         }
         button:hover {
             background-color: #45a049;
@@ -48,24 +47,23 @@
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
-        .input-row textarea, .input-row select, .input-row button {
-            flex: 1 1 auto;
-            margin: 5px;
+        .input-row textarea,
+        .input-row select,
+        .input-row button,
+        #secret-key,
+        #delimiter {
+            width: 100%;
+            margin: 5px 0;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
         }
-        .input-row button {
-            flex: 0 1 auto;
-            background-color: #4CAF50;
-            color: #fff;
-            border: none;
-            cursor: pointer;
+        #secret-key,
+        #delimiter {
+            max-width: 100%;
         }
-        .input-row button:hover {
-            background-color: #45a049;
-        }
-        #hmac-result, #hmac-data {
+        #hmac-result,
+        #hmac-data {
             margin-top: 20px;
             font-weight: bold;
             word-break: break-all;
@@ -83,6 +81,12 @@
     <div class="container">
         <label for="secret-key">Khóa bí mật:</label>
         <input type="text" id="secret-key" placeholder="Nhập khóa bí mật của bạn"><br><br>
+        <label for="delimiter">Kiểu nối chuỗi:</label>
+        <select id="delimiter">
+            <option value="|">|</option>
+            <option value=",">,</option>
+            <option value=";">;</option>
+        </select><br><br>
         <button id="add-row">Thêm dòng</button>
         <button id="gen-hmac">Tạo HMAC</button>
         <div id="input-container"></div>
@@ -120,31 +124,31 @@
             const container = document.getElementById('input-container');
             const row = document.createElement('div');
             row.className = 'input-row';
-            
+
             const textarea = document.createElement('textarea');
             textarea.style.resize = 'none';
             row.appendChild(textarea);
-            
+
             const select = document.createElement('select');
             const optionText = document.createElement('option');
             optionText.value = 'text';
             optionText.innerText = 'Văn bản';
             select.appendChild(optionText);
-            
+
             const optionJson = document.createElement('option');
             optionJson.value = 'json';
             optionJson.innerText = 'JSON';
             select.appendChild(optionJson);
-            
+
             row.appendChild(select);
-            
+
             const deleteButton = document.createElement('button');
             deleteButton.innerText = 'Xóa';
             deleteButton.addEventListener('click', function() {
                 row.remove();
             });
             row.appendChild(deleteButton);
-            
+
             container.appendChild(row);
         });
 
@@ -155,25 +159,26 @@
                 return;
             }
 
+            const delimiter = document.getElementById('delimiter').value;
             const rows = document.querySelectorAll('.input-row');
             let message = '';
 
             rows.forEach(row => {
                 const textarea = row.querySelector('textarea').value;
                 const type = row.querySelector('select').value;
-				if (textarea!="") {
-					if (type === 'json') {
-						try {
-							const json = JSON.parse(textarea);
-							message += JSON.stringify(json) + '|';
-						} catch (e) {
-							alert('Định dạng JSON không hợp lệ.');
-							return;
-						}
-					} else {
-						message += textarea + '|';
-					}
-				}
+                if (textarea) {
+                    if (type === 'json') {
+                        try {
+                            const json = JSON.parse(textarea);
+                            message += JSON.stringify(json) + delimiter;
+                        } catch (e) {
+                            alert('Định dạng JSON không hợp lệ.');
+                            return;
+                        }
+                    } else {
+                        message += textarea + delimiter;
+                    }
+                }
             });
 
             message = message.slice(0, -1);
