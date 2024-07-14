@@ -106,6 +106,12 @@
         <div id="hmac-data"></div>
         <div id="hmac-result"></div>
         <button id="copy-hmac" style="display:none;">Sao chép HMAC</button>
+        <label><input type="checkbox" id="auto-save"> Auto Save</label>
+        <label for="save-method">Phương pháp:</label>
+        <select id="save-method">
+            <option value="debounce">Debounce</option>
+            <option value="throttle">Throttle</option>
+        </select>
     </div>
     <script>
         let rowCount = 0;
@@ -132,6 +138,56 @@
             }
         }
 
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function (...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        function saveData() {
+            const autoSaveChecked = document.getElementById('auto-save').checked;
+            const saveMethod = document.getElementById('save-method').value;
+
+            if (autoSaveChecked) {
+                const data = {
+                    secretKey: document.getElementById('secret-key').value,
+                    delimiter: document.getElementById('delimiter').value,
+                    rows: Array.from(document.querySelectorAll('.input-row')).map(row => ({
+                        textarea: row.querySelector('textarea').value,
+                        select: row.querySelector('select').value
+                    })),
+                    autoSave: autoSaveChecked,
+                    saveMethod: saveMethod
+                };
+                localStorage.setItem('hmacData', JSON.stringify(data));
+            }
+        }
+
+        const debouncedSaveData = debounce(saveData, 300);
+        const throttledSaveData = throttle(saveData, 300);
+
+        function handleInput() {
+            const method = document.getElementById('save-method').value;
+            if (method === 'debounce') {
+                debouncedSaveData();
+            } else if (method === 'throttle') {
+                throttledSaveData();
+            }
+        }
+
         document.getElementById('add-row').addEventListener('click', () => {
             const container = document.getElementById('input-container');
             const row = document.createElement('div');
@@ -141,6 +197,7 @@
             const textarea = document.createElement('textarea');
             textarea.style.resize = 'none';
             textarea.style.height = "35px";
+            textarea.addEventListener('input', handleInput);
             row.appendChild(textarea);
 
             const select = document.createElement('select');
@@ -153,6 +210,7 @@
                 } else {
                     beautifyButton.style.display = 'none';
                 }
+                handleInput();
             });
             row.appendChild(select);
 
@@ -164,10 +222,14 @@
 
             const deleteButton = document.createElement('button');
             deleteButton.innerText = 'Xóa';
-            deleteButton.addEventListener('click', () => row.remove());
+            deleteButton.addEventListener('click', () => {
+                row.remove();
+                handleInput();
+            });
             row.appendChild(deleteButton);
 
             container.appendChild(row);
+            handleInput();
         });
 
         document.getElementById('gen-hmac').addEventListener('click', async () => {
@@ -210,6 +272,31 @@
                 alert('Sao chép HMAC thất bại.');
             });
         });
+
+        window.addEventListener('load', () => {
+            const savedData = localStorage.getItem('hmacData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                document.getElementById('secret-key').value = data.secretKey;
+                document.getElementById('delimiter').value = data.delimiter;
+                data.rows.forEach((rowData, index) => {
+                    document.getElementById('add-row').click();
+                    const row = document.querySelector(`#row-${index}`);
+                    row.querySelector('textarea').value = rowData.textarea;
+                    row.querySelector('select').value = rowData.select;
+                    if (rowData.select === 'json') {
+                        row.querySelector('button').style.display = 'inline-block';
+                    }
+                });
+                document.getElementById('auto-save').checked = data.autoSave;
+                document.getElementById('save-method').value = data.saveMethod;
+            }
+        });
+
+        document.getElementById('auto-save').addEventListener('change', handleInput);
+        document.getElementById('save-method').addEventListener('change', handleInput);
+        document.getElementById('secret-key').addEventListener('input', handleInput);
+        document.getElementById('delimiter').addEventListener('change', handleInput);
     </script>
 </body>
 
