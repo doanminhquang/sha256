@@ -163,13 +163,15 @@
 
             const message = messageArray.join(delimiter);
             const hmacValue = await hmac(secretKey, message);
-            document.getElementById('hmac-data').textContent = `DATA: ${message}`;
-            document.getElementById('hmac-result').textContent = `HMAC: ${hmacValue}`;
+			const dataLabel = 'DATA: ';
+			const hmacLabel = 'HMAC: ';
+            document.getElementById('hmac-data').textContent = `${dataLabel}${message}`;
+            document.getElementById('hmac-result').textContent = `${hmacLabel}${hmacValue}`;
             document.getElementById('copy-hmac').style.display = 'block';
         });
 
         document.getElementById('copy-hmac').addEventListener('click', () => {
-            const hmacText = document.getElementById('hmac-result').textContent.replace('HMAC: ', '');
+            const hmacText = document.getElementById('hmac-result').textContent.replace(hmacLabel, '');
             navigator.clipboard.writeText(hmacText).then(() => {
                 alert('HMAC đã được sao chép vào clipboard.');
             }).catch(() => {
