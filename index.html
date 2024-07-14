@@ -87,77 +87,59 @@
             <option value=",">,</option>
             <option value=";">;</option>
         </select>
-        </br></br>
-        <div id="input-container"></div>        
-        </br></br>
+		<label for="input-container">Dữ liệu:</label>
+        <div id="input-container"></div>
         <button id="add-row">Thêm dòng</button>
         <button id="gen-hmac">Tạo HMAC</button>
-        </br></br>
         <div id="hmac-data"></div>
         <div id="hmac-result"></div>
-        </br></br>
+        <br><br>
         <button id="copy-hmac" style="display:none;">Sao chép HMAC</button>
     </div>
     <script>
+        let rowCount = 0;
+
         async function hmac(secretKey, message, algorithm = "SHA-256") {
             const encoder = new TextEncoder();
-            const messageUint8Array = encoder.encode(message);
-            const keyUint8Array = encoder.encode(secretKey);
-            const cryptoKey = await window.crypto.subtle.importKey(
-                "raw",
-                keyUint8Array, {
-                    name: "HMAC",
-                    hash: algorithm
-                },
-                false,
-                ["sign"]
+            const keyData = encoder.encode(secretKey);
+            const messageData = encoder.encode(message);
+            const cryptoKey = await crypto.subtle.importKey(
+                "raw", keyData, { name: "HMAC", hash: algorithm }, false, ["sign"]
             );
-            const signature = await window.crypto.subtle.sign(
-                "HMAC",
-                cryptoKey,
-                messageUint8Array
-            );
-            const hashArray = Array.from(new Uint8Array(signature));
-            const hashHex = hashArray
-                .map((b) => b.toString(16).padStart(2, "0"))
-                .join("");
-            return hashHex;
+            const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+            return Array.from(new Uint8Array(signature))
+                        .map(b => b.toString(16).padStart(2, "0"))
+                        .join("");
         }
 
-        document.getElementById('add-row').addEventListener('click', function() {
+        document.getElementById('add-row').addEventListener('click', () => {
             const container = document.getElementById('input-container');
             const row = document.createElement('div');
             row.className = 'input-row';
+            row.id = `row-${rowCount++}`;
 
             const textarea = document.createElement('textarea');
-            textarea.style.resize = 'none';
+			textarea.style.resize = 'none';
             row.appendChild(textarea);
 
             const select = document.createElement('select');
-            const optionText = document.createElement('option');
-            optionText.value = 'text';
-            optionText.innerText = 'Văn bản';
-            select.appendChild(optionText);
-
-            const optionJson = document.createElement('option');
-            optionJson.value = 'json';
-            optionJson.innerText = 'JSON';
-            select.appendChild(optionJson);
-
+            select.innerHTML = '<option value="text">Văn bản</option><option value="json">JSON</option>';
+            select.addEventListener('change', () => {
+				textarea.style.height = "";
+                textarea.style.resize = select.value === 'json' ? 'vertical' : 'none';
+            });
             row.appendChild(select);
 
             const deleteButton = document.createElement('button');
             deleteButton.innerText = 'Xóa';
-            deleteButton.addEventListener('click', function() {
-                row.remove();
-            });
+            deleteButton.addEventListener('click', () => row.remove());
             row.appendChild(deleteButton);
 
             container.appendChild(row);
         });
 
-        document.getElementById('gen-hmac').addEventListener('click', async function() {
-            const secretKey = document.getElementById('secret-key').value;
+        document.getElementById('gen-hmac').addEventListener('click', async () => {
+            const secretKey = document.getElementById('secret-key').value.trim();
             if (!secretKey) {
                 alert('Vui lòng nhập khóa bí mật.');
                 return;
@@ -165,40 +147,32 @@
 
             const delimiter = document.getElementById('delimiter').value;
             const rows = document.querySelectorAll('.input-row');
-            let message = '';
-
-            rows.forEach(row => {
-                const textarea = row.querySelector('textarea').value;
+            const messageArray = Array.from(rows).map(row => {
+                const textarea = row.querySelector('textarea').value.trim();
                 const type = row.querySelector('select').value;
-                if (textarea) {
-                    if (type === 'json') {
-                        try {
-                            const json = JSON.parse(textarea);
-                            message += JSON.stringify(json) + delimiter;
-                        } catch (e) {
-                            alert('Định dạng JSON không hợp lệ.');
-                            return;
-                        }
-                    } else {
-                        message += textarea + delimiter;
+                if (type === 'json') {
+                    try {
+                        return JSON.stringify(JSON.parse(textarea));
+                    } catch {
+                        alert('Định dạng JSON không hợp lệ.');
+                        throw new Error('Invalid JSON format');
                     }
                 }
+                return textarea;
             });
 
-            message = message.slice(0, -1);
+            const message = messageArray.join(delimiter);
             const hmacValue = await hmac(secretKey, message);
-            const dataDiv = document.getElementById('hmac-data');
-            const resultDiv = document.getElementById('hmac-result');
-            dataDiv.innerHTML = `DATA: ${message}`;
-            resultDiv.innerHTML = `HMAC: ${hmacValue}`;
+            document.getElementById('hmac-data').textContent = `DATA: ${message}`;
+            document.getElementById('hmac-result').textContent = `HMAC: ${hmacValue}`;
             document.getElementById('copy-hmac').style.display = 'block';
         });
 
-        document.getElementById('copy-hmac').addEventListener('click', function() {
-            const hmacText = document.getElementById('hmac-result').textContent;
-            navigator.clipboard.writeText(hmacText.replace('HMAC: ', '')).then(function() {
+        document.getElementById('copy-hmac').addEventListener('click', () => {
+            const hmacText = document.getElementById('hmac-result').textContent.replace('HMAC: ', '');
+            navigator.clipboard.writeText(hmacText).then(() => {
                 alert('HMAC đã được sao chép vào clipboard.');
-            }, function() {
+            }).catch(() => {
                 alert('Sao chép HMAC thất bại.');
             });
         });
