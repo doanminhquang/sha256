@@ -157,6 +157,10 @@
             };
         }
 
+        function clearSavedData() {
+            localStorage.removeItem('hmacData');
+        }
+
         function saveData() {
             const autoSaveChecked = document.getElementById('auto-save').checked;
             const saveMethod = document.getElementById('save-method').value;
@@ -174,7 +178,7 @@
                 };
                 localStorage.setItem('hmacData', JSON.stringify(data));
             } else {
-                localStorage.removeItem('hmacData');
+                clearSavedData();
             }
         }
 
@@ -188,10 +192,6 @@
             } else if (method === 'throttle') {
                 throttledSaveData();
             }
-        }
-
-        function clearSavedData() {
-            localStorage.removeItem('hmacData');
         }
 
         document.getElementById('add-row').addEventListener('click', () => {
