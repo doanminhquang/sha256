@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình tạo HMAC</title>
+    <title>Trình tạo sha256</title>
     <style>
         * {
             outline: none;
@@ -72,8 +72,8 @@
             max-width: 100%;
         }
 
-        #hmac-result,
-        #hmac-data {
+        #sha256-result,
+        #sha256-data {
             margin-top: 20px;
             font-weight: bold;
             word-break: break-all;
@@ -89,7 +89,7 @@
 </head>
 
 <body>
-    <h1>Trình tạo HMAC</h1>
+    <h1>Trình tạo sha256</h1>
     <div class="container">
         <label for="secret-key">Khóa bí mật:</label>
         <input type="text" id="secret-key" placeholder="Nhập khóa bí mật của bạn"><br><br>
@@ -102,10 +102,10 @@
         <label for="input-container">Dữ liệu:</label>
         <div id="input-container"></div>
         <button id="add-row">Thêm dòng</button>
-        <button id="gen-hmac">Tạo HMAC</button>
-        <div id="hmac-data"></div>
-        <div id="hmac-result"></div>
-        <button id="copy-hmac" style="display:none;">Sao chép HMAC</button>
+        <button id="gen-sha256">Tạo SHA256</button>
+        <div id="sha256-data"></div>
+        <div id="sha256-result"></div>
+        <button id="copy-sha256" style="display:none;">Sao chép SHA256</button>
         <label><input type="checkbox" id="auto-save">Tự động lưu với </label>
         <label for="save-method">phương pháp:</label>
         <select id="save-method">
@@ -116,14 +116,14 @@
     <script>
         let rowCount = 0;
 
-        async function hmac(secretKey, message, algorithm = "SHA-256") {
+        async function sha256(secretKey, message, algorithm = "SHA-256") {
             const encoder = new TextEncoder();
             const keyData = encoder.encode(secretKey);
             const messageData = encoder.encode(message);
             const cryptoKey = await crypto.subtle.importKey(
-                "raw", keyData, { name: "HMAC", hash: algorithm }, false, ["sign"]
+                "raw", keyData, { name: "sha256", hash: algorithm }, false, ["sign"]
             );
-            const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+            const signature = await crypto.subtle.sign("sha256", cryptoKey, messageData);
             return Array.from(new Uint8Array(signature))
                         .map(b => b.toString(16).padStart(2, "0"))
                         .join("");
@@ -158,7 +158,7 @@
         }
 
         function clearSavedData() {
-            localStorage.removeItem('hmacData');
+            localStorage.removeItem('sha256Data');
         }
 
         function saveData() {
@@ -176,7 +176,7 @@
                     autoSave: autoSaveChecked,
                     saveMethod: saveMethod
                 };
-                localStorage.setItem('hmacData', JSON.stringify(data));
+                localStorage.setItem('sha256Data', JSON.stringify(data));
             } else {
                 clearSavedData();
             }
@@ -238,7 +238,7 @@
             handleInput();
         });
 
-        document.getElementById('gen-hmac').addEventListener('click', async () => {
+        document.getElementById('gen-sha256').addEventListener('click', async () => {
             const secretKey = document.getElementById('secret-key').value.trim();
             if (!secretKey) {
                 alert('Vui lòng nhập khóa bí mật.');
@@ -262,26 +262,26 @@
             });
 
             const message = messageArray.join(delimiter);
-            const hmacValue = await hmac(secretKey, message);
+            const sha256Value = await sha256(secretKey, message);
             const dataLabel = 'DATA: ';
-            const hmacLabel = 'HMAC: ';
-            document.getElementById('hmac-data').textContent = `${dataLabel}${message}`;
-            document.getElementById('hmac-result').textContent = `${hmacLabel}${hmacValue}`;
-            document.getElementById('copy-hmac').style.display = 'block';
+            const sha256Label = 'SHA256: ';
+            document.getElementById('sha256-data').textContent = `${dataLabel}${message}`;
+            document.getElementById('sha256-result').textContent = `${sha256Label}${sha256Value}`;
+            document.getElementById('copy-sha256').style.display = 'block';
             handleInput();
         });
 
-        document.getElementById('copy-hmac').addEventListener('click', () => {
-            const hmacText = document.getElementById('hmac-result').textContent.replace('HMAC: ', '');
-            navigator.clipboard.writeText(hmacText).then(() => {
-                alert('HMAC đã được sao chép vào clipboard.');
+        document.getElementById('copy-sha256').addEventListener('click', () => {
+            const sha256Text = document.getElementById('sha256-result').textContent.replace('sha256: ', '');
+            navigator.clipboard.writeText(sha256Text).then(() => {
+                alert('sha256 đã được sao chép vào clipboard.');
             }).catch(() => {
-                alert('Sao chép HMAC thất bại.');
+                alert('Sao chép sha256 thất bại.');
             });
         });
 
         window.addEventListener('load', () => {
-            const savedData = localStorage.getItem('hmacData');
+            const savedData = localStorage.getItem('sha256Data');
             if (savedData) {
                 const data = JSON.parse(savedData);
                 document.getElementById('secret-key').value = data.secretKey;
